@@ -12,6 +12,13 @@ type BotConfig struct {
 	LogOutputFile string
 	LogServer     string
 	ServiceName   string
+	APIHolidayKey string
+}
+
+type Holiday struct {
+	Name    string `json:"name"`
+	Date    string `json:"date"`
+	Country string `json:"country"`
 }
 
 func NewBotInfastructureConfig() *BotConfig {
@@ -20,7 +27,7 @@ func NewBotInfastructureConfig() *BotConfig {
 	config := &BotConfig{}
 
 	// Load environment variables from .env file
-	loadFile := godotenv.Load("config/.env")
+	loadFile := godotenv.Load(".env")
 	if loadFile != nil {
 		log.Fatalf("Error loading .env file: %s", loadFile.Error())
 	}
@@ -31,6 +38,7 @@ func NewBotInfastructureConfig() *BotConfig {
 	config.LogOutputFile = os.Getenv("LOG_OUTPUT_FILE")
 	config.LogServer = os.Getenv("LOG_SERVER")
 	config.ServiceName = os.Getenv("SERVICE_NAME")
+	config.APIHolidayKey = os.Getenv("API_KEY_HOLIDAYS")
 
 	return config
 }

@@ -1,7 +1,7 @@
 package container
 
 import (
-	"git.foxminded.ua/foxstudent104181/telegrambot/config"
+	"git.foxminded.ua/foxstudent104181/holidaybot/config"
 	"go.uber.org/zap"
 )
 

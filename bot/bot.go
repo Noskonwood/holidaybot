@@ -1,12 +1,16 @@
 package bot
 
 import (
+	"encoding/json"
+	"fmt"
 	"git.foxminded.ua/foxstudent104181/holidaybot/config"
 	"git.foxminded.ua/foxstudent104181/holidaybot/container"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/sirupsen/logrus"
 	"log"
+	"net/http"
 	"strings"
+	"time"
 )
 
 func Bot(container.BotInfastructureContainer) {
@@ -37,31 +41,60 @@ func Bot(container.BotInfastructureContainer) {
 
 		logger.Infof("Received message: %s", update.Message.Text)
 
-		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
+		//msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
 
 		switch strings.ToLower(update.Message.Text) {
-		case "/start", "/help":
-			msg.Text = "Hi, I'm bot created by Bogdan Petrukhin\n Available commands:\n/about - provides short info about me\n/links - provides a list of my social links (GitHub, LinkedIn, etc)"
-			msg.ReplyMarkup = tgbotapi.NewReplyKeyboard(
-				tgbotapi.NewKeyboardButtonRow(
-					tgbotapi.NewKeyboardButton("/about"),
-					tgbotapi.NewKeyboardButton("/links"),
-				),
+		case "/start":
+			countries := []string{"\U0001F1EF\U0001F1F5 Japan", "\U0001F1E9\U0001F1EA Germany"}
+
+			var buttons []tgbotapi.KeyboardButton
+			for _, country := range countries {
+				buttons = append(buttons, tgbotapi.NewKeyboardButton(country))
+			}
+
+			replyMarkup := tgbotapi.NewReplyKeyboard(
+				tgbotapi.NewKeyboardButtonRow(buttons...),
 			)
-		case "/about":
-			msg.Text = "Hi, my name is Bogdan and I'm going to be a software engineer in a future. I live in Canada and warm welcome to my telegram bot"
-		case "/links":
-			msg.Text = "You can find me on the following platforms:\n\nGitHub: https://github.com/Noskonwood\nLinkedIn: https://www.linkedin.com/in/bogdan-petrukhin/"
+			replyMarkup.ResizeKeyboard = true
+
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Choose a country:")
+			msg.ReplyMarkup = replyMarkup
+
+			bot.Send(msg)
+
+		case "🇯🇵 japan", "🇩🇪 germany":
+			countryCode := strings.Split(update.Message.Text, " ")[0]
+			apiKey := botConfig.APIHolidayKey
+			holidayAPIURL := fmt.Sprintf("https://app.abstractapi.com/api/holidays?api_key=%s&country=%s&year=%d&month=%d&day=%d", apiKey, countryCode, time.Now().Year(), time.Now().Month(), time.Now().Day())
+
+			resp, err := http.Get(holidayAPIURL)
+			if err != nil {
+				log.Fatalf("Error sending request to API: %v", err)
+			}
+			defer resp.Body.Close()
+
+			var holidays []config.Holiday
+			if err := json.NewDecoder(resp.Body).Decode(&holidays); err != nil {
+				log.Fatalf("Error decoding response body: %v", err)
+			}
+
+			var holidayMessage string
+			if len(holidays) > 0 {
+				holidayMessage = fmt.Sprintf("Today is %s in %s", holidays[0].Name, countryCode)
+			} else {
+				holidayMessage = fmt.Sprintf("There are no holidays today in %s", countryCode)
+			}
+
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, holidayMessage)
+
+			if _, err := bot.Send(msg); err != nil {
+				logger.Errorf("Failed to send message: %v", err)
+				log.Fatalf("Error to send the message: %v", err)
+			}
+
 		default:
 			logger.Warnf("Received unknown command: %s", update.Message.Text)
 			continue
 		}
-
-		if _, err := bot.Send(msg); err != nil {
-			logger.Errorf("Failed to send message: %v", err)
-			log.Fatalf("Error to send the message: %v", err)
-		}
-
-		logger.Info("Message sent")
 	}
 }
