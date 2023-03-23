@@ -3,19 +3,22 @@ package bot
 import (
 	"encoding/json"
 	"fmt"
-	"git.foxminded.ua/foxstudent104181/holidaybot/config"
-	"git.foxminded.ua/foxstudent104181/holidaybot/container"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/sirupsen/logrus"
 	"log"
 	"net/http"
 	"strings"
 	"time"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/sirupsen/logrus"
+
+	"holidaybot/config"
+	"holidaybot/container"
 )
 
-func Bot(container.BotInfastructureContainer) {
-	botConfig := config.NewBotInfastructureConfig()
-	bot, err := tgbotapi.NewBotAPI(botConfig.APIKey)
+func Bot(container container.BotInfastructureContainer) {
+	cfg := container.GetConfig()
+
+	bot, err := tgbotapi.NewBotAPI(cfg.APIKey)
 	if err != nil {
 		log.Fatalf("Error to connect to bot: %v", err)
 	}
@@ -64,7 +67,7 @@ func Bot(container.BotInfastructureContainer) {
 
 		case "🇯🇵 japan", "🇩🇪 germany":
 			countryCode := strings.Split(update.Message.Text, " ")[0]
-			apiKey := botConfig.APIHolidayKey
+			apiKey := cfg.APIHolidayKey
 			holidayAPIURL := fmt.Sprintf("https://app.abstractapi.com/api/holidays?api_key=%s&country=%s&year=%d&month=%d&day=%d", apiKey, countryCode, time.Now().Year(), time.Now().Month(), time.Now().Day())
 
 			resp, err := http.Get(holidayAPIURL)
