@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -44,31 +43,18 @@ func Bot(container container.BotInfastructureContainer) {
 
 		logger.Infof("Received message: %s", update.Message.Text)
 
-		//msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
-
-		switch strings.ToLower(update.Message.Text) {
+		switch update.Message.Text {
 		case "/start":
-			countries := []string{"\U0001F1EF\U0001F1F5 Japan", "\U0001F1E9\U0001F1EA Germany"}
-
-			var buttons []tgbotapi.KeyboardButton
-			for _, country := range countries {
-				buttons = append(buttons, tgbotapi.NewKeyboardButton(country))
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Choose a country by entering its 2-letter ISO country code (e.g. JP for Japan):")
+			msg.ReplyMarkup = tgbotapi.NewRemoveKeyboard(true)
+			if _, err := bot.Send(msg); err != nil {
+				logger.Errorf("Failed to send message: %v", err)
+				log.Fatalf("Error to send the message: %v", err)
 			}
 
-			replyMarkup := tgbotapi.NewReplyKeyboard(
-				tgbotapi.NewKeyboardButtonRow(buttons...),
-			)
-			replyMarkup.ResizeKeyboard = true
-
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Choose a country:")
-			msg.ReplyMarkup = replyMarkup
-
-			bot.Send(msg)
-
-		case "🇯🇵 japan", "🇩🇪 germany":
-			countryCode := strings.Split(update.Message.Text, " ")[0]
+		default:
 			apiKey := cfg.APIHolidayKey
-			holidayAPIURL := fmt.Sprintf("https://app.abstractapi.com/api/holidays?api_key=%s&country=%s&year=%d&month=%d&day=%d", apiKey, countryCode, time.Now().Year(), time.Now().Month(), time.Now().Day())
+			holidayAPIURL := fmt.Sprintf("https://app.abstractapi.com/api/holidays?api_key=%s&country=%s&year=%d&month=%d&day=%d", apiKey, update.Message.Text, time.Now().Year(), time.Now().Month(), time.Now().Day())
 
 			resp, err := http.Get(holidayAPIURL)
 			if err != nil {
@@ -83,9 +69,9 @@ func Bot(container container.BotInfastructureContainer) {
 
 			var holidayMessage string
 			if len(holidays) > 0 {
-				holidayMessage = fmt.Sprintf("Today is %s in %s", holidays[0].Name, countryCode)
+				holidayMessage = fmt.Sprintf("Today is %s in %s", holidays[0].Name, update.Message.Text)
 			} else {
-				holidayMessage = fmt.Sprintf("There are no holidays today in %s", countryCode)
+				holidayMessage = fmt.Sprintf("There are no holidays today in %s", update.Message.Text)
 			}
 
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, holidayMessage)
@@ -94,10 +80,6 @@ func Bot(container container.BotInfastructureContainer) {
 				logger.Errorf("Failed to send message: %v", err)
 				log.Fatalf("Error to send the message: %v", err)
 			}
-
-		default:
-			logger.Warnf("Received unknown command: %s", update.Message.Text)
-			continue
 		}
 	}
 }

@@ -1,9 +1,8 @@
 package logger
 
 import (
-	"log"
-
 	"go.uber.org/zap"
+	"log"
 
 	"holidaybot/config"
 )
