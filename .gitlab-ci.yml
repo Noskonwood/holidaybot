@@ -1,0 +1,6 @@
+lint:
+  stage: test
+  image: golang:latest
+  script:
+    - go get github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+    - golangci-lint run

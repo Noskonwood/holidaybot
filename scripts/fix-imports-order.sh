@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 ## Check if gogroup is installed
 if ! tool_loc="$(type -p gogroup)" || [[ -z ${tool_loc} ]]; then
       echo "gogroup is not installed. installing...."

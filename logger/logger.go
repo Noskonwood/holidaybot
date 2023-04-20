@@ -1,10 +1,10 @@
 package logger
 
 import (
-	"go.uber.org/zap"
 	"log"
 
-	"holidaybot/config"
+	"example.com/holidaybot/config"
+	"go.uber.org/zap"
 )
 
 const (

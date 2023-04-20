@@ -1,9 +1,8 @@
 package container
 
 import (
+	"example.com/holidaybot/config"
 	"go.uber.org/zap"
-
-	"holidaybot/config"
 )
 
 // BotInfrastructureContainer represents an interface for accessing the data which sharing in overall application

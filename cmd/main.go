@@ -1,12 +1,11 @@
 package main
 
 import (
+	"example.com/holidaybot/bot"
+	"example.com/holidaybot/config"
+	"example.com/holidaybot/container"
+	"example.com/holidaybot/logger"
 	_ "go.uber.org/zap"
-
-	"holidaybot/bot"
-	"holidaybot/config"
-	"holidaybot/container"
-	"holidaybot/logger"
 )
 
 func main() {
